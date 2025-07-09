@@ -63,52 +63,64 @@
     const contractAddress = "0x139C44eE1386aFcECfC4725AE507E8E72475eB02";
     const abi = [
       {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-      {"inputs":[],"name":"ApprovalCallerNotOwnerNorApproved","type":"error"},
-      {"inputs":[],"name":"ApprovalQueryForNonexistentToken","type":"error"},
-      {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"approve","outputs":[],"stateMutability":"payable","type":"function"},
-      {"inputs":[],"name":"BalanceQueryForZeroAddress","type":"error"},
-      {"inputs":[],"name":"MintERC2309QuantityExceedsLimit","type":"error"},
-      {"inputs":[],"name":"MintToZeroAddress","type":"error"},
-      {"inputs":[],"name":"MintZeroQuantity","type":"error"},
-      {"inputs":[],"name":"NotCompatibleWithSpotMints","type":"error"},
       {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"publicMint","outputs":[],"stateMutability":"payable","type":"function"},
+      {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"whitelistMint","outputs":[],"stateMutability":"nonpayable","type":"function"},
       {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
       {"inputs":[],"name":"totalMinted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[],"name":"MINT_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"whitelistMint","outputs":[],"stateMutability":"nonpayable","type":"function"}
+      {"inputs":[],"name":"MINT_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
     ];
+
     let signer, contract;
 
     async function connectWallet() {
-      if (window.ethereum) {
+      try {
+        if (!window.ethereum) throw new Error("MetaMask not detected");
+
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         contract = new ethers.Contract(contractAddress, abi, signer);
+        alert("Wallet connected: " + await signer.getAddress());
         updateInfo();
-      } else {
-        alert("MetaMask is not installed!");
+      } catch (err) {
+        alert("Error connecting wallet: " + err.message);
       }
     }
 
     async function updateInfo() {
-      const supply = await contract.totalSupply();
-      const minted = await contract.totalMinted();
-      document.getElementById("totalSupply").innerText = supply.toString();
-      document.getElementById("totalMinted").innerText = minted.toString();
+      try {
+        const supply = await contract.totalSupply();
+        const minted = await contract.totalMinted();
+        document.getElementById("totalSupply").innerText = supply.toString();
+        document.getElementById("totalMinted").innerText = minted.toString();
+      } catch (err) {
+        console.error("Error updating supply info:", err);
+      }
     }
 
     async function publicMint() {
-      const price = await contract.MINT_PRICE();
-      const tx = await contract.publicMint(1, { value: price });
-      await tx.wait();
-      updateInfo();
+      try {
+        if (!contract) throw new Error("Connect wallet first");
+        const price = await contract.MINT_PRICE();
+        const tx = await contract.publicMint(1, { value: price });
+        await tx.wait();
+        alert("Public mint successful!");
+        updateInfo();
+      } catch (err) {
+        alert("Mint failed: " + err.message);
+      }
     }
 
     async function whitelistMint() {
-      const tx = await contract.whitelistMint(1);
-      await tx.wait();
-      updateInfo();
+      try {
+        if (!contract) throw new Error("Connect wallet first");
+        const tx = await contract.whitelistMint(1);
+        await tx.wait();
+        alert("Whitelist mint successful!");
+        updateInfo();
+      } catch (err) {
+        alert("Whitelist mint failed: " + err.message);
+      }
     }
 
     document.getElementById("connectButton").addEventListener("click", connectWallet);
