@@ -1,125 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sexy NFT Minting DApp</title>
-  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFT Minting DApp</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(to right, #1f1c2c, #928dab);
-      color: white;
+      background: #0f0f0f;
+      color: #fff;
       text-align: center;
     }
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      background-color: #2c2c54;
+      padding: 1rem 2rem;
+      background-color: #1a1a1a;
     }
-    button {
-      padding: 0.5rem 1rem;
-      background-color: #ff6f61;
+    .btn {
+      padding: 0.6rem 1.2rem;
+      background: #ff9900;
       border: none;
-      border-radius: 6px;
       color: white;
-      font-weight: bold;
       cursor: pointer;
+      border-radius: 5px;
+      font-size: 1rem;
     }
-    .container {
-      margin-top: 2rem;
+    .mint-section {
+      padding: 2rem;
     }
-    .preview {
-      margin: 2rem auto;
-    }
-    img {
+    img.nft-preview {
       width: 300px;
-      height: auto;
-      border-radius: 12px;
+      border-radius: 10px;
+      margin-bottom: 1rem;
     }
-    .mint-buttons {
-      margin-top: 1rem;
+    .mint-info {
+      margin: 1rem 0;
     }
   </style>
 </head>
 <body>
   <header>
-    <h2>NFT Minting DApp</h2>
-    <button onclick="connectWallet()" id="connectButton">Connect Wallet</button>
+    <h2>Bitcoin NFT Mint</h2>
+    <button id="connectButton" class="btn">Connect Wallet</button>
   </header>
-  <div class="container">
-    <h3>Total Supply: <span id="totalSupply">0</span></h3>
-    <h3>Total Minted: <span id="totalMinted">0</span></h3>
 
-    <div class="preview">
-      <h3>Bitcoin NFT Preview</h3>
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Bitcoin.svg/2048px-Bitcoin.svg.png" alt="Bitcoin NFT Preview" />
+  <div class="mint-section">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" alt="NFT Preview" class="nft-preview">
+    <div class="mint-info">
+      <p>Total Supply: <span id="totalSupply">0</span></p>
+      <p>Total Minted: <span id="totalMinted">0</span></p>
     </div>
-
-    <div class="mint-buttons">
-      <button onclick="paidMint()">Public Paid Mint</button>
-      <button onclick="whitelistMint()">Whitelist Free Mint</button>
-    </div>
+    <button id="publicMintBtn" class="btn">Mint (Paid)</button>
+    <button id="whitelistMintBtn" class="btn">Whitelist Mint (Free)</button>
   </div>
 
   <script>
     const contractAddress = "0x139C44eE1386aFcECfC4725AE507E8E72475eB02";
-    const abi = /* ABI JSON here (shortened here for brevity) */;
-
-    let web3;
-    let contract;
-    let accounts;
+    const abi = YOUR_ABI_HERE;
+    let signer, contract;
 
     async function connectWallet() {
       if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        try {
-          accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          document.getElementById('connectButton').innerText = 'Connected';
-          contract = new web3.eth.Contract(abi, contractAddress);
-          updateSupply();
-        } catch (error) {
-          console.error("User rejected wallet connection");
-        }
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        contract = new ethers.Contract(contractAddress, abi, signer);
+        updateInfo();
       } else {
-        alert("Please install MetaMask");
+        alert("MetaMask is not installed!");
       }
     }
 
-    async function updateSupply() {
-      const totalSupply = await contract.methods.totalSupply().call();
-      const totalMinted = await contract.methods.totalMinted().call();
-      document.getElementById('totalSupply').innerText = totalSupply;
-      document.getElementById('totalMinted').innerText = totalMinted;
+    async function updateInfo() {
+      const supply = await contract.totalSupply();
+      const minted = await contract.totalMinted();
+      document.getElementById("totalSupply").innerText = supply.toString();
+      document.getElementById("totalMinted").innerText = minted.toString();
     }
 
-    async function paidMint() {
-      const price = await contract.methods.MINT_PRICE().call();
-      try {
-        await contract.methods.publicMint(1).send({
-          from: accounts[0],
-          value: price
-        });
-        updateSupply();
-      } catch (err) {
-        console.error("Paid mint failed", err);
-      }
+    async function publicMint() {
+      const price = await contract.MINT_PRICE();
+      const tx = await contract.publicMint(1, { value: price });
+      await tx.wait();
+      updateInfo();
     }
 
     async function whitelistMint() {
-      try {
-        await contract.methods.whitelistMint(1).send({
-          from: accounts[0]
-        });
-        updateSupply();
-      } catch (err) {
-        console.error("Whitelist mint failed", err);
-      }
+      const tx = await contract.whitelistMint(1);
+      await tx.wait();
+      updateInfo();
     }
+
+    document.getElementById("connectButton").addEventListener("click", connectWallet);
+    document.getElementById("publicMintBtn").addEventListener("click", publicMint);
+    document.getElementById("whitelistMintBtn").addEventListener("click", whitelistMint);
   </script>
 </body>
 </html>
