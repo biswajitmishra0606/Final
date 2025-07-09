@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFT Minting DApp</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bitcoin NFT Mint</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -50,7 +49,7 @@
   </header>
 
   <div class="mint-section">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" alt="NFT Preview" class="nft-preview">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" alt="NFT Preview" class="nft-preview" />
     <div class="mint-info">
       <p>Total Supply: <span id="totalSupply">0</span></p>
       <p>Total Minted: <span id="totalMinted">0</span></p>
@@ -59,73 +58,78 @@
     <button id="whitelistMintBtn" class="btn">Whitelist Mint (Free)</button>
   </div>
 
+  <!-- Load Ethers.js FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+  <!-- Then run your custom logic -->
   <script>
-    const contractAddress = "0x139C44eE1386aFcECfC4725AE507E8E72475eB02";
-    const abi = [
-      {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-      {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"publicMint","outputs":[],"stateMutability":"payable","type":"function"},
-      {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"whitelistMint","outputs":[],"stateMutability":"nonpayable","type":"function"},
-      {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[],"name":"totalMinted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-      {"inputs":[],"name":"MINT_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
-    ];
+    document.addEventListener("DOMContentLoaded", () => {
+      const contractAddress = "0x139C44eE1386aFcECfC4725AE507E8E72475eB02";
+      const abi = [
+        { "inputs": [{ "internalType": "uint256", "name": "quantity", "type": "uint256" }], "name": "publicMint", "outputs": [], "stateMutability": "payable", "type": "function" },
+        { "inputs": [{ "internalType": "uint256", "name": "quantity", "type": "uint256" }], "name": "whitelistMint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+        { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+        { "inputs": [], "name": "totalMinted", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+        { "inputs": [], "name": "MINT_PRICE", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
+      ];
 
-    let signer, contract;
+      let signer, contract;
 
-    async function connectWallet() {
-      try {
-        if (!window.ethereum) throw new Error("MetaMask not detected");
+      async function connectWallet() {
+        try {
+          if (!window.ethereum) throw new Error("MetaMask not detected");
 
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        contract = new ethers.Contract(contractAddress, abi, signer);
-        alert("Wallet connected: " + await signer.getAddress());
-        updateInfo();
-      } catch (err) {
-        alert("Error connecting wallet: " + err.message);
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = provider.getSigner();
+          contract = new ethers.Contract(contractAddress, abi, signer);
+          alert("Wallet connected: " + await signer.getAddress());
+          updateInfo();
+        } catch (err) {
+          alert("Error connecting wallet: " + err.message);
+        }
       }
-    }
 
-    async function updateInfo() {
-      try {
-        const supply = await contract.totalSupply();
-        const minted = await contract.totalMinted();
-        document.getElementById("totalSupply").innerText = supply.toString();
-        document.getElementById("totalMinted").innerText = minted.toString();
-      } catch (err) {
-        console.error("Error updating supply info:", err);
+      async function updateInfo() {
+        try {
+          const supply = await contract.totalSupply();
+          const minted = await contract.totalMinted();
+          document.getElementById("totalSupply").innerText = supply.toString();
+          document.getElementById("totalMinted").innerText = minted.toString();
+        } catch (err) {
+          console.error("Error updating supply info:", err);
+        }
       }
-    }
 
-    async function publicMint() {
-      try {
-        if (!contract) throw new Error("Connect wallet first");
-        const price = await contract.MINT_PRICE();
-        const tx = await contract.publicMint(1, { value: price });
-        await tx.wait();
-        alert("Public mint successful!");
-        updateInfo();
-      } catch (err) {
-        alert("Mint failed: " + err.message);
+      async function publicMint() {
+        try {
+          if (!contract) throw new Error("Connect wallet first");
+          const price = await contract.MINT_PRICE();
+          const tx = await contract.publicMint(1, { value: price });
+          await tx.wait();
+          alert("Public mint successful!");
+          updateInfo();
+        } catch (err) {
+          alert("Mint failed: " + err.message);
+        }
       }
-    }
 
-    async function whitelistMint() {
-      try {
-        if (!contract) throw new Error("Connect wallet first");
-        const tx = await contract.whitelistMint(1);
-        await tx.wait();
-        alert("Whitelist mint successful!");
-        updateInfo();
-      } catch (err) {
-        alert("Whitelist mint failed: " + err.message);
+      async function whitelistMint() {
+        try {
+          if (!contract) throw new Error("Connect wallet first");
+          const tx = await contract.whitelistMint(1);
+          await tx.wait();
+          alert("Whitelist mint successful!");
+          updateInfo();
+        } catch (err) {
+          alert("Whitelist mint failed: " + err.message);
+        }
       }
-    }
 
-    document.getElementById("connectButton").addEventListener("click", connectWallet);
-    document.getElementById("publicMintBtn").addEventListener("click", publicMint);
-    document.getElementById("whitelistMintBtn").addEventListener("click", whitelistMint);
+      document.getElementById("connectButton").addEventListener("click", connectWallet);
+      document.getElementById("publicMintBtn").addEventListener("click", publicMint);
+      document.getElementById("whitelistMintBtn").addEventListener("click", whitelistMint);
+    });
   </script>
 </body>
 </html>
