@@ -1,76 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bitcoin NFT Mint</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    * {
       margin: 0;
       padding: 0;
-      background: #0f0f0f;
-      color: #fff;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
+      color: #f1f1f1;
       text-align: center;
+      min-height: 100vh;
     }
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 1rem 2rem;
-      background-color: #1a1a1a;
+      background-color: #111;
+      border-bottom: 1px solid #333;
     }
     .btn {
       padding: 0.6rem 1.2rem;
-      background: #ff9900;
+      background: #f7931a;
       border: none;
       color: white;
       cursor: pointer;
-      border-radius: 5px;
+      border-radius: 8px;
       font-size: 1rem;
+      transition: 0.3s ease;
+    }
+    .btn:hover {
+      background: #ffb347;
     }
     .mint-section {
-      padding: 2rem;
+      padding: 3rem 2rem;
     }
-    img.nft-preview {
-      width: 300px;
-      border-radius: 10px;
-      margin-bottom: 1rem;
+    .nft-preview {
+      width: 250px;
+      margin-bottom: 2rem;
+      animation: spin 6s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotateY(0deg); }
+      to { transform: rotateY(360deg); }
     }
     .mint-info {
-      margin: 1rem 0;
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .wallet-address {
+      color: #4ee476;
+      font-size: 0.9rem;
+    }
+    .content-box {
+      background: #1d1d1d;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 0 20px rgba(255, 153, 0, 0.1);
     }
   </style>
 </head>
 <body>
   <header>
     <h2>Bitcoin NFT Mint</h2>
-    <button id="connectButton" class="btn">Connect Wallet</button>
+    <div>
+      <span id="walletAddress" class="wallet-address"></span>
+      <button id="connectButton" class="btn">Connect Wallet</button>
+    </div>
   </header>
 
   <div class="mint-section">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" alt="NFT Preview" class="nft-preview" />
-    <div class="mint-info">
-      <p>Total Supply: <span id="totalSupply">0</span></p>
-      <p>Total Minted: <span id="totalMinted">0</span></p>
+    <div class="content-box">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" alt="NFT Preview" class="nft-preview" />
+      <div class="mint-info">
+        <p>Total Supply: <span id="totalSupply">0</span></p>
+        <p>Total Minted: <span id="totalMinted">0</span></p>
+      </div>
+      <button id="publicMintBtn" class="btn">Mint (Paid)</button>
+      <button id="whitelistMintBtn" class="btn" style="margin-left: 1rem">Whitelist Mint (Free)</button>
     </div>
-    <button id="publicMintBtn" class="btn">Mint (Paid)</button>
-    <button id="whitelistMintBtn" class="btn">Whitelist Mint (Free)</button>
   </div>
 
-  <!-- Load Ethers.js FIRST -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-  <!-- Then run your custom logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const contractAddress = "0x139C44eE1386aFcECfC4725AE507E8E72475eB02";
       const abi = [
-        { "inputs": [{ "internalType": "uint256", "name": "quantity", "type": "uint256" }], "name": "publicMint", "outputs": [], "stateMutability": "payable", "type": "function" },
-        { "inputs": [{ "internalType": "uint256", "name": "quantity", "type": "uint256" }], "name": "whitelistMint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
-        { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-        { "inputs": [], "name": "totalMinted", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-        { "inputs": [], "name": "MINT_PRICE", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
+        {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"publicMint","outputs":[],"stateMutability":"payable","type":"function"},
+        {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"whitelistMint","outputs":[],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"totalMinted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"MINT_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
       ];
 
       let signer, contract;
@@ -82,8 +112,9 @@
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           await provider.send("eth_requestAccounts", []);
           signer = provider.getSigner();
+          const address = await signer.getAddress();
+          document.getElementById("walletAddress").innerText = `Connected: ${address.slice(0, 6)}...${address.slice(-4)}`;
           contract = new ethers.Contract(contractAddress, abi, signer);
-          alert("Wallet connected: " + await signer.getAddress());
           updateInfo();
         } catch (err) {
           alert("Error connecting wallet: " + err.message);
@@ -97,7 +128,7 @@
           document.getElementById("totalSupply").innerText = supply.toString();
           document.getElementById("totalMinted").innerText = minted.toString();
         } catch (err) {
-          console.error("Error updating supply info:", err);
+          console.error("Error updating info:", err);
         }
       }
 
@@ -110,7 +141,7 @@
           alert("Public mint successful!");
           updateInfo();
         } catch (err) {
-          alert("Mint failed: " + err.message);
+          alert("Public mint failed: " + err.message);
         }
       }
 
