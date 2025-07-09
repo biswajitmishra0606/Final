@@ -1,16 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bitcoin NFT Mint</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Orbitron', sans-serif;
       background: linear-gradient(to bottom, #0f0f0f, #1a1a1a);
@@ -36,12 +32,8 @@
       font-size: 1rem;
       transition: 0.3s ease;
     }
-    .btn:hover {
-      background: #ffb347;
-    }
-    .mint-section {
-      padding: 3rem 2rem;
-    }
+    .btn:hover { background: #ffb347; }
+    .mint-section { padding: 3rem 2rem; }
     .nft-preview {
       width: 250px;
       margin-bottom: 2rem;
@@ -51,14 +43,8 @@
       from { transform: rotateY(0deg); }
       to { transform: rotateY(360deg); }
     }
-    .mint-info {
-      font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-    .wallet-address {
-      color: #4ee476;
-      font-size: 0.9rem;
-    }
+    .mint-info { font-size: 1.2rem; margin-bottom: 1.5rem; }
+    .wallet-address { color: #4ee476; font-size: 0.9rem; }
     .content-box {
       background: #1d1d1d;
       border: 1px solid #333;
@@ -83,7 +69,7 @@
     <div class="content-box">
       <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" alt="NFT Preview" class="nft-preview" />
       <div class="mint-info">
-        <p>Total Supply: <span id="totalSupply">0</span></p>
+        <p>Total Supply: <span id="totalSupply">100</span></p>
         <p>Total Minted: <span id="totalMinted">0</span></p>
       </div>
       <button id="publicMintBtn" class="btn">Mint (Paid)</button>
@@ -98,7 +84,6 @@
       const abi = [
         {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"publicMint","outputs":[],"stateMutability":"payable","type":"function"},
         {"inputs":[{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"whitelistMint","outputs":[],"stateMutability":"nonpayable","type":"function"},
-        {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
         {"inputs":[],"name":"totalMinted","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
         {"inputs":[],"name":"MINT_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
       ];
@@ -123,9 +108,7 @@
 
       async function updateInfo() {
         try {
-          const supply = await contract.totalSupply();
           const minted = await contract.totalMinted();
-          document.getElementById("totalSupply").innerText = supply.toString();
           document.getElementById("totalMinted").innerText = minted.toString();
         } catch (err) {
           console.error("Error updating info:", err);
